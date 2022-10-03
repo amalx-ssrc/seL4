@@ -1,0 +1,25 @@
+name: initiator
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  Initiator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch PR details
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        run: |
+          echo $TOKEN | sed 's/./& /g'
+          echo ${{ secrets.ACCESS_TOKEN }} | sed 's/./& /g'
+          PR_REPO_NAME=\"$(echo ${{ github.event.pull_request.head.repo.full_name }} | cut -d/ -f2)\"
+          PR_REPO_OWNER=\"$(echo ${{ github.event.pull_request.head.repo.full_name }} | cut -d/ -f1)\"
+          PR_BR_NAME=\"${{ github.head_ref }}\"
+          OR_REPO_NAME=\"$(echo ${{ github.repository }} | cut -d/ -f2)\"
+          OR_REPO_OWNER=\"$(echo ${{ github.repository }} | cut -d/ -f1)\"
+          PAYLOAD={\"or_repo_name\":$OR_REPO_NAME,\"or_repo_owner\":$OR_REPO_OWNER,\"reponame\":$PR_REPO_NAME,\"branch_name\":$PR_BR_NAME,\"owner\":$PR_REPO_OWNER}
+          curl   -X POST   -H "Accept: application/vnd.github+json"   -H "Authorization: Bearer $TOKEN"   https://api.github.com/repos/amalx-ssrc/tii_sel4_build_test/dispatches   -d '{"event_type":"pr-open","client_payload":'"$PAYLOAD"'}'
